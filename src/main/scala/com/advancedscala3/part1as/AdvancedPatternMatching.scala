@@ -1,6 +1,7 @@
 package com.advancedscala3.part1as
 
 import java.io.ObjectInputFilter.Status
+import java.time.Instant
 
 object AdvancedPatternMatching {
 
@@ -140,15 +141,70 @@ object AdvancedPatternMatching {
     case PersonWrapper(name) => s"Hey my name is $name"
   }
 
+  //
+
+  case class Job (id: Int, title: String, created: Instant)
+
+  class Database {
+    private var jobMap: Map[Int, Job] = Map.empty
+    def save(job: Job): Unit = jobMap = jobMap + ((job.id, job))
+    def list(): Map[Int, Job] = jobMap
+    def get(id: Int): Option[Job] = jobMap.get(id)
+
+    // we need a method for update
+//    def update(id: Int, title: String): Option[Job] = jobMap = jobMap + ((id, title))
+    def delete(id: Int): Unit = jobMap = jobMap - id
+  }
+  // example of a database
+
+  // superclass
+  sealed trait Event
+
+  case class JobCreated (id: Int, title: String, created: Instant) extends Event
+  case class JobUpdated (id: Int, title: String) extends Event
+  case class JobDeleted (id: Int) extends Event
+
+
+  def handleEvent(db: Database, event: Event): Unit = {
+    event match
+      case JobCreated(id, title, created) => db.save(Job(id, title, created))
+      case JobUpdated(id, title) =>
+        val maybeOldJob: Option[Job] = db.get(id)
+        val maybeNewJob: Option[Job] = maybeOldJob.map(oldJob => oldJob.copy(title = title))
+
+        db.delete(id)
+        db.save(maybeNewJob.getOrElse(Job(id, title, Instant.now())))
+      case JobDeleted(id) => db.delete(id)
+  }
+
 
   def main(args: Array[String]): Unit = {
+    val database = new Database()
+    val job1 = JobCreated(1, "icecream maker", Instant.now())
+    val job2 = JobCreated(2, "icecream maker2", Instant.now())
+    val jobUpdated = JobUpdated(1, "coffee maker")
+    val jobDeleted = JobDeleted(1)
+
     println(danielPM)
     println(danielsLegalStatus)
     println(danielsBrotherLegalStatus)
-//    println(brothersStatus)
+    //    println(brothersStatus)
     println(mathProperty)
     println(humanDescriptionEither)
     println(listPM)
+
+    println(database.list())
+
+//    handleEvent(database, job1)
+    handleEvent(database, job2)
+
+    println(database.list())
+
+    handleEvent(database, jobUpdated)
+
+    println(database.list())
+
+
 
   }
 
