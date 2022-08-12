@@ -2,6 +2,7 @@ package com.advancedscala3.part1as
 
 import java.io.ObjectInputFilter.Status
 import java.time.Instant
+import scala.annotation.tailrec
 
 object AdvancedPatternMatching {
 
@@ -170,8 +171,9 @@ object AdvancedPatternMatching {
       case JobCreated(id, title, created) => db.save(Job(id, title, created))
       case JobUpdated(id, title) =>
         val maybeOldJob: Option[Job] = db.get(id)
+        // copy method allows to construct new instances of a case class
+        // while specifying just the fields that are changing
         val maybeNewJob: Option[Job] = maybeOldJob.map(oldJob => oldJob.copy(title = title))
-
         db.delete(id)
         db.save(maybeNewJob.getOrElse(Job(id, title, Instant.now())))
       case JobDeleted(id) => db.delete(id)
@@ -184,6 +186,15 @@ object AdvancedPatternMatching {
     val job2 = JobCreated(2, "icecream maker2", Instant.now())
     val jobUpdated = JobUpdated(1, "coffee maker")
     val jobDeleted = JobDeleted(1)
+
+
+//    def countTo(n: Int): Unit =
+//
+//      def count(i : Int): Unit =
+//        if (i <= n) then
+//          println(i)
+//          count(i + 1)
+//      countTo(5)
 
     println(danielPM)
     println(danielsLegalStatus)
@@ -203,6 +214,8 @@ object AdvancedPatternMatching {
     handleEvent(database, jobUpdated)
 
     println(database.list())
+
+
 
 
 
